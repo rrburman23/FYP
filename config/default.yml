@@ -1,0 +1,12 @@
+# config/default.yml
+yolo:
+  cfg:     "models/yolov3.cfg"         # Path to YOLOv3 cfg file
+  weights: "models/yolov3_2000.weights" # Path to YOLOv3 weights file
+  names:   "models/labels.names"       # Path to labels (class names)
+
+# Global processing configuration
+processing:
+  confidence_threshold: 0.4
+  nms_threshold: 0.45
+
+video_path: "data/video.mp4"  # Default path for testing video input
