@@ -1,7 +1,7 @@
 # config/default.yml
 yolo:
   cfg:     "models/yolov3.cfg"         # Path to YOLOv3 cfg file
-  weights: "models/yolov3_2000.weights" # Path to YOLOv3 weights file
+  weights: "models/yolov3.weights" # Path to YOLOv3 weights file
   names:   "models/labels.names"       # Path to labels (class names)
 
 # Global processing configuration

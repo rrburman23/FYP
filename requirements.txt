@@ -12,4 +12,5 @@ pyyaml==6.0  # For YAML parsing (used for configuration files)
 tqdm==4.65.0  # For progress bars during processing
 pandas==2.0.0  # For handling dataframes
 deep-sort-realtime==1.3.2  # For the Deep SORT tracking algorithm
-bytetrack
+bytetracker
+

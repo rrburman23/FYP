@@ -5,7 +5,7 @@ Command‑line entry point for batch processing a single video with a
 detector + tracker pair (no GUI).
 
 Usage example:
-    python -m src.main --det YOLOv5 --trk SORT --video data/test.mp4
+    python -m src.main --det YOLOv5 --trk MedianFlow --video data/testFootage.mp4
 """
 
 import argparse
@@ -19,39 +19,49 @@ DETECTORS = {
     "YOLOv5":    "detectors.yolov5.YOLOv5",
     "FasterRCNN":"detectors.fasterrcnn.FasterRCNN",
     "YOLOv3":    "detectors.yolo.YOLO",
-    "RetinaNet": "detectors.retinanet.RetinaNet",
+    " ": "detectors. . ",
 }
 TRACKERS = {
     "SORT":     "trackers.sort.SORTTracker",
     "DeepSORT": "trackers.deepsort.DeepSORTTracker",
-    "ByteTrack":"trackers.bytetrack.ByteTrackTracker",
     "OpenCV":   "trackers.opencv.OpenCVTracker",
+    "MedianFlow":"trackers.medianflow.MedianFlowTracker",
+    "GOTURN":   "trackers.goturn.GOTURNTracker",
 }
 
 def import_from(path: str):
-    """Import class from 'module.ClassName' string."""
-    module_name, cls_name = path.rsplit(".", 1)
-    mod = __import__(module_name, fromlist=[cls_name])
-    return getattr(mod, cls_name)
+    """Import class from 'module.Class' notation"""
+    parts = path.split(".")
+    mod = __import__(".".join(parts[:-1]), fromlist=[parts[-1]])
+    return getattr(mod, parts[-1])
 
 def main():
-    parser = argparse.ArgumentParser(description="UAV detector & tracker batch run")
-    parser.add_argument("--det",  choices=DETECTORS.keys(), default="SSD")
-    parser.add_argument("--trk",  choices=TRACKERS.keys(), default="Kalman")
-    parser.add_argument("--video", type=str, required=True, help="Path to input video")
-    parser.add_argument("--cfg",   type=str, help="Optional YAML config override")
+    # CLI argument parser
+    parser = argparse.ArgumentParser(description="Run detector-tracker pair on video")
+    parser.add_argument("--det", required=True, choices=DETECTORS.keys(), help="Detector name")
+    parser.add_argument("--trk", required=True, choices=TRACKERS.keys(), help="Tracker name")
+    parser.add_argument("--video", required=True, type=str, help="Path to video file")
+
     args = parser.parse_args()
 
-    cfg = load_config(args.cfg)
+    # Config and paths
+    cfg = load_config()
+    video_path = args.video
+
+    # Detector factory
     Detector = import_from(DETECTORS[args.det])
-    Tracker  = import_from(TRACKERS[args.trk])
+    detector = Detector(conf_thresh=cfg["processing"]["confidence_threshold"])
 
-    detector = Detector(conf_thresh=cfg["processing"]["confidence_threshold"]) \
-               if args.det == "SSD" else Detector()
-    tracker  = Tracker()
+    # Tracker factory
+    Tracker = import_from(TRACKERS[args.trk])
+    tracker = Tracker()
 
-    for _, _ in run_pair(detector, tracker, args.video, show_window=True):
-        pass      # run_pair shows frames itself when show_window=True
+    # Process video
+    for _, frm in run_pair(detector, tracker, video_path):
+        cv2.imshow("frame", frm)
+        if cv2.waitKey(1) == ord("q"):
+            break
+    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()

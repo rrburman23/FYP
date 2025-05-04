@@ -1,42 +1,76 @@
 import cv2
-from utils.paths import load_config
+import numpy as np
+from typing import Union
+from detectors import YOLOv5, YOLOv3, FasterRCNN, SSDDetector
+from trackers import TrackerBase
+from utils.visualise import draw_detections, draw_tracks 
+from pathlib import Path
 
-# Define the run_pair function directly here
-def run_pair(detector, tracker, video_path, show_window=False):
+def run_pair(
+    detector: Union[YOLOv5, YOLOv3, FasterRCNN, SSDDetector],
+    tracker: TrackerBase,
+    video_path: str,
+    show_window: bool = False
+) -> None:
     """
-    Process a video frame by frame, apply the detector and tracker, and stream the annotated frames.
-
-    Args:
-    - detector: Object of the chosen detector (e.g., YOLOv5, SSD)
-    - tracker: Object of the chosen tracker (e.g., SORT, Kalman)
-    - video_path: Path to the input video
-    - show_window: Boolean flag to show the processed frames in a window
+    Process a video frame-by-frame, apply the detector and tracker, and optionally display the results.
     """
     
-    # Open video file using OpenCV
-    cap = cv2.VideoCapture(video_path)
-    while cap.isOpened():
+    video_path = Path(video_path)  # Convert video_path to a Path object for proper file handling
+
+    # Check if the video file exists before attempting to open it
+    if not video_path.exists():
+        print(f"[run_pair] ❌ Video file not found at: {video_path}")
+        raise FileNotFoundError(f"[run_pair] ❌ Video file not found at: {video_path}")
+    else:
+        print(f"[run_pair] ✅ Video file exists at: {video_path}")
+        cap = cv2.VideoCapture(str(video_path))  # Convert Path to string and open video
+
+    if not cap.isOpened():
+        raise FileNotFoundError(f"[run_pair] ❌ Failed to open video: {video_path}")
+
+    print(f"[run_pair] 🔄 Processing video: {video_path} Detector: {detector} Tracker: {tracker}")
+
+    while True:
         ret, frame = cap.read()
         if not ret:
+            print("[run_pair] ✅ Finished processing video.")
             break
 
-        # Apply the detector to the frame
-        detections = detector.detect(frame)
+        # Run object detection
+        detections = detector.detect(frame)  # Expected format: List[Tuple[x1, y1, x2, y2, conf]]
 
-        # Update tracker with detected bounding boxes
-        tracker.update(detections)
+        # Ensure detections are in the correct format (List[Tuple[x1, y1, x2, y2, conf]])
+        if isinstance(detections, np.ndarray):
+            detections = detections.tolist()
 
-        # Annotate the frame with tracking information (e.g., bounding boxes)
-        for track in tracker.get_tracks():
-            x1, y1, x2, y2 = track  # Assuming tracker returns bounding box coordinates
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+        # DEBUG: Check the format of the detections
+        # print("[run_pair] Detections format:", detections)
 
-        # Show the frame with annotations if requested
+        # Ensure each detection has 5 elements (x1, y1, x2, y2, confidence)
+        detections = [detection[:5] for detection in detections]  # Strip extra data if necessary
+        
+        # Ensure detections are correctly formatted for DeepSort (as numpy array)
+        detections = np.array(detections, dtype=np.float32)
+
+        # Check for empty or invalid detections
+        if detections.size == 0:
+            tracked_objects = []  # No detections, empty track list
+        else:
+            tracked_objects = tracker.update(frame, detections)  # Update tracker with valid detections
+
+        # Draw tracked objects and detections on the frame
+        frame = draw_detections(frame, detections)  # Annotate frame with detections
+        frame = draw_tracks(frame, tracked_objects)  # Annotate frame with tracks
+
         if show_window:
-            cv2.imshow("Processed Frame", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.imshow("Tracking", frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
-    # Release video capture and close the OpenCV window
+        # Yield frame along with detections and tracks
+        yield frame, detections, tracked_objects
+
     cap.release()
-    cv2.destroyAllWindows()
+    if show_window:
+        cv2.destroyAllWindows()

@@ -1,6 +1,6 @@
 # FYP: Object Detection and Tracking
 
-This project implements an object detection and tracking system using various deep learning models and tracking algorithms. It integrates popular object detectors such as YOLOv3, YOLOv5, SSD, FasterRCNN, and RetinaNet, with tracking algorithms like Kalman, SORT, DeepSORT, and ByteTrack.
+This project implements an object detection and tracking system using various deep learning models and tracking algorithms. It integrates popular object detectors such as YOLOv3, YOLOv5, SSD, FasterRCNN, and  , with tracking algorithms like Kalman, SORT, DeepSORT, and ByteTrack.
 
 ## Project Structure
 
@@ -53,10 +53,10 @@ This project implements an object detection and tracking system using various de
   - YOLOv5 (future)
   - SSD (future)
   - FasterRCNN (future)
-  - RetinaNet (future)
+  -   (future)
 
 - **Trackers**:
-  - Kalman Filter
+  - OpenCV
   - SORT
   - DeepSORT
   - ByteTrack
@@ -87,7 +87,7 @@ FYP/
 │   │   ├── yolov5.py
 │   │   ├── ssd.py
 │   │   ├── fasterrcnn.py
-│   │   └── retinanet.py
+│   │   └──  .py
 │   ├── trackers/
 │   │   ├── __init__.py
 │   │   ├── kalman.py
