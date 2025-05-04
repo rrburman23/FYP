@@ -15,7 +15,7 @@ This project implements an object detection and tracking system using various de
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/FYP.git
+   git clone https://github.com/rrburman23/FYP.git
    cd FYP
    ```
 
@@ -50,16 +50,15 @@ This project implements an object detection and tracking system using various de
 - **Detectors**:
 
   - YOLOv3
-  - YOLOv5 (future)
-  - SSD (future)
-  - FasterRCNN (future)
-  -   (future)
+  - YOLOv5 
+  - SSD 
+  - FasterRCNN 
 
 - **Trackers**:
-  - OpenCV
   - SORT
   - DeepSORT
-  - ByteTrack
+  - MedianFlow
+  - GOTURN
 
 ## Directory Structure
 FYP/
