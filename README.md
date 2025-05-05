@@ -1,63 +1,135 @@
-# FYP: Object Detection and Tracking
+# 🎓 Final Year Project – Object Detection & Tracking System
 
-This project implements an object detection and tracking system using various deep learning models and tracking algorithms. It integrates popular object detectors such as YOLOv3, YOLOv5, SSD, FasterRCNN, and  , with tracking algorithms like Kalman, SORT, DeepSORT.
+This project is my **Final Year Project** for a **BSc in Computer Science**. It features a real-time object detection and tracking system tailored for UAV (drone) footage. The system combines cutting-edge object detection models with multiple tracking algorithms, all wrapped in a clean, interactive **Streamlit** web app.
 
-## Project Structure
+🔗 **Live Demo:** [Streamlit App](https://deployment-url.streamlit.app)
 
-- **`src/`**: Contains the source code for detectors, trackers, utility functions, and the main Streamlit app.
-- **`data/`**: Directory for storing input videos to be processed.
-- **`models/`**: Stores all trained model weights and configuration files.
-- **`config/`**: Configuration files, such as default settings for the app.
-- **`outputs/`**: Folder where processed video files are saved.
+---
 
-## Setup and Installation
+## 🔧 Features
 
-1. Clone the repository:
+- Real-time object detection and multi-object tracking
+- Streamlit-based UI for uploading and processing UAV footage
+- Support for YOLOv3, YOLOv5, SSD, FasterRCNN
+- Multiple tracking algorithms (SORT, DeepSORT, KCF, MOSSE, MedianFlow)
+- Visualisations and performance metrics
 
-   ```bash
-   git clone https://github.com/rrburman23/FYP.git
-   cd FYP
-   ```
+---
 
-2. Create a virtual environment and activate it:
+## 🗂️ Project Structure
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # For Windows: venv\Scripts\activate
-   ```
+FYP/
+├── config/                # Application configuration files
+│   └── default.yml        # Main YAML config for detectors, trackers, and processing
+├── data/                  # Input and output data, like user uploaded videos
+├── models/                # Pretrained models and weights (auto-downloaded)
+│   ├── yolov3/            # YOLOv3 config, weights, and class names
+│   └── ...                # Other models as needed
+├── src/                   # Main source code
+│   ├── __init__.py
+│   ├── app.py             # Streamlit web app entry point
+│   ├── main.py            # Terminal/CLI entry point
+│   ├── detectors/         # Detector implementations (YOLOv3, YOLOv5, SSD, FasterRCNN)
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── yolo.py
+│   │   └── ...
+│   ├── trackers/          # Tracker implementations (SORT, DeepSORT, KCF, MOSSE, MedianFlow)
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── sort.py
+│   │   └── ...
+│   ├── processing/        # Detection + tracking integration
+│   │   ├── __init__.py
+│   │   └── run_pair.py    # Runs the detector tracker pair on the uploaded video
+│   ├── metrics/           # Evaluation and visualization modules
+│   │   ├── __init__.py
+│   │   ├── evaluation.py
+│   │   └── visualisation.py
+│   └── util/              # Utility functions
+│   │   ├── __init__.py
+│       ├── paths.py
+│       └── ...
+├── requirements.txt       # Python dependencies
+└── .gitignore             # Git ignore rules for local files and temporary data
 
-3. Install the required dependencies:
+---
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+## 🚀 Getting Started (Local Setup)
 
-4. Download the YOLOv3 model weights and config file:
+Although the app is already deployed, you can also run it locally:
 
-   - Download `yolov3.weights` and `yolov3.cfg` from [YOLOv3 official site](https://pjreddie.com/darknet/yolo/).
-   - Save them in `models/yolov3/`.
+### 1. Clone the repository
 
-5. Run the application:
+```bash
+git clone https://github.com/rrburman23/FYP.git
+cd FYP
+```
 
-   ```bash
-   streamlit run src/app.py
-   ```
+### 2. Create and activate a virtual environment
 
-6. Upload a video, select a detector (e.g., YOLOv3), and a tracker (e.g., Kalman), then watch the object detection and tracking in real-time!
+```bash
+python -m venv venv
+source venv/bin/activate       # On Windows: venv\Scripts\activate
+```
 
-## Model Support
+### 3. Install the dependencies
 
-- **Detectors**:
+```bash
+pip install -r requirements.txt
+```
 
-  - YOLOv3
-  - YOLOv5 
-  - SSD 
-  - FasterRCNN 
+### 4. Run the Streamlit app
 
-- **Trackers**:
-  - SORT
-  - DeepSORT
-  - MedianFlow
-  - GOTURN
+```bash
+streamlit run src/app.py
+```
 
-## Directory Structure
+---
+
+## 🤖 Supported Models
+
+### Detectors
+
+- YOLOv3 (automatically downloads weights and config)
+- YOLOv5
+- SSD
+- FasterRCNN
+
+### Trackers
+
+- SORT
+- DeepSORT
+- MOSSE
+- KCF
+- MedianFlow
+
+---
+
+## 📊 Metrics & Visualisations
+
+The app computes and displays:
+
+- Total object detections
+- Unique tracks and average duration
+- Identity switches and fragmentation
+- Average processing FPS
+- Memory usage
+
+Each processed video includes overlayed detection boxes and track IDs with colour-coded paths.
+
+---
+
+## 📌 Notes
+
+Model files such as yolov3.weights, yolov3.cfg, and labels.names are automatically downloaded on first run.
+
+This is a final year Computer Science project, completed as part of my undergraduate degree.
+
+There are no plans for future development—this is the final version.
+
+---
+
+## ✅ Summary
+
+This project demonstrates the integration of object detection and tracking technologies into a unified, user-friendly platform aimed at real-time analysis of UAV footage. It showcases a complete data pipeline from video input to metric analysis, suitable for academic and practical applications.
