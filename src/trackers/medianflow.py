@@ -1,24 +1,16 @@
-"""
-OpenCV MedianFlow Tracker.
-Requires:
-    pip install opencv-contrib-python
-"""
-
 import cv2
 from trackers.base import TrackerBase
-
 
 def create_medianflow_tracker():
     """
     Creates a MedianFlow tracker compatible with different OpenCV versions.
     """
     if hasattr(cv2, 'legacy'):
-        return cv2.legacy.TrackerMedianFlow_create()
+        return cv2.legacy.TrackerMedianFlow_create()  # Use legacy version if available
     elif hasattr(cv2, 'TrackerMedianFlow_create'):
-        return cv2.TrackerMedianFlow_create()
+        return cv2.TrackerMedianFlow_create()  # Use non-legacy version
     else:
         raise AttributeError("MedianFlow tracker is not available in your OpenCV installation.")
-
 
 class MedianFlowTracker(TrackerBase):
     """
@@ -26,7 +18,7 @@ class MedianFlowTracker(TrackerBase):
     """
 
     def __init__(self):
-        self.tracker = create_medianflow_tracker()
+        self.tracker = create_medianflow_tracker()  # Use the appropriate tracker creator
         self.initialized = False
         self.track_id = 0
 
@@ -34,7 +26,6 @@ class MedianFlowTracker(TrackerBase):
         """
         Initialize the tracker with a frame and bounding box.
         """
-        self.tracker = create_medianflow_tracker()
         self.initialized = self.tracker.init(frame, tuple(bbox))
 
     def update(self, frame, detections):

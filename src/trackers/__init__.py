@@ -9,7 +9,8 @@ from .base          import TrackerBase
 from .sort          import SORTTracker
 from .deepsort      import DeepSORTTracker
 from .medianflow    import MedianFlowTracker
-from .goturn        import GOTURNTracker
+from .kcf           import KCFTracker
+from .mosse         import MOSSETracker
 
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "SORTTracker",
     "DeepSORTTracker",
     "MedianFlowTracker",
-    "GOTURNTracker"
+    "KCFTracker",
+    "MOSSETracker"
 ]
