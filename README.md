@@ -124,12 +124,6 @@ Each processed video includes overlayed detection boxes and track IDs with colou
 
 Model files such as yolov3.weights, yolov3.cfg, and labels.names are automatically downloaded on first run.
 
-This is a final year Computer Science project, completed as part of my undergraduate degree.
+This is a Final Year Project, completed as part of my undergraduate degree at Queen Mary University of London.
 
 There are no plans for future development—this is the final version.
-
----
-
-## ✅ Summary
-
-This project demonstrates the integration of object detection and tracking technologies into a unified, user-friendly platform aimed at real-time analysis of UAV footage. It showcases a complete data pipeline from video input to metric analysis, suitable for academic and practical applications.
