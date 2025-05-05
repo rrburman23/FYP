@@ -1,85 +1,95 @@
-# 🎓 Final Year Project – Object Detection & Tracking System
+# 🎓 Object Detection & Tracking System
 
-This project is my **Final Year Project** for a **BSc in Computer Science**. It features a real-time object detection and tracking system tailored for UAV (drone) footage. The system combines cutting-edge object detection models with multiple tracking algorithms, all wrapped in a clean, interactive **Streamlit** web app.
+This **Final Year Project** for a **BSc in Computer Science** at Queen Mary University of London implements a real-time object detection and tracking system optimized for UAV (drone) footage. It integrates state-of-the-art detection models and tracking algorithms within an interactive **Streamlit** web application.
 
-🔗 **Live Demo:** [Streamlit App](https://deployment-url.streamlit.app)
-
----
-
-## 🔧 Features
-
-- Real-time object detection and multi-object tracking
-- Streamlit-based UI for uploading and processing UAV footage
-- Support for YOLOv3, YOLOv5, SSD, FasterRCNN
-- Multiple tracking algorithms (SORT, DeepSORT, KCF, MOSSE, MedianFlow)
-- Visualisations and performance metrics
+🔗 **Live Demo**: [Streamlit App](https://deployment-url.streamlit.app)
 
 ---
 
-## 🗂️ Project Structure
+## ✨ Features
 
+- Real-time object detection and multi-object tracking.
+- Streamlit-based UI for uploading and processing UAV footage.
+- Support for multiple detectors: YOLOv3, YOLOv5, SSD, FasterRCNN.
+- Support for multiple trackers: SORT, DeepSORT, KCF, MOSSE, MedianFlow.
+- Visualizations and performance metrics for processed videos.
+
+---
+
+## 📂 Project Structure
+
+```text
 FYP/
-├── config/                # Application configuration files
-│   └── default.yml        # Main YAML config for detectors, trackers, and processing
-├── data/                  # Input and output data, like user uploaded videos
-├── models/                # Pretrained models and weights (auto-downloaded)
-│   ├── yolov3/            # YOLOv3 config, weights, and class names
-│   └── ...                # Other models as needed
-├── src/                   # Main source code
-│   ├── __init__.py
-│   ├── app.py             # Streamlit web app entry point
-│   ├── main.py            # Terminal/CLI entry point
-│   ├── detectors/         # Detector implementations (YOLOv3, YOLOv5, SSD, FasterRCNN)
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── yolo.py
-│   │   └── ...
-│   ├── trackers/          # Tracker implementations (SORT, DeepSORT, KCF, MOSSE, MedianFlow)
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── sort.py
-│   │   └── ...
-│   ├── processing/        # Detection + tracking integration
-│   │   ├── __init__.py
-│   │   └── run_pair.py    # Runs the detector tracker pair on the uploaded video
-│   ├── metrics/           # Evaluation and visualization modules
-│   │   ├── __init__.py
-│   │   ├── evaluation.py
-│   │   └── visualisation.py
-│   └── util/              # Utility functions
-│   │   ├── __init__.py
-│       ├── paths.py
-│       └── ...
-├── requirements.txt       # Python dependencies
-└── .gitignore             # Git ignore rules for local files and temporary data
+├── config/                   # Application configuration files
+│   └── default.yml           # Main YAML config for detectors and trackers
+├── data/                     # Input/output videos and metrics
+├── models/                   # Pretrained models (auto-downloaded)
+│   ├── yolov3/               # YOLOv3 configuration files
+│   │   ├── yolov3.cfg        # YOLOv3 configuration
+│   │   └── yolov3.weights    # YOLOv3 weights
+│   └── ...                   # Other model directories
+├── src/                      # Source code
+│   ├── __init__.py           # Package initialization
+│   ├── app.py                # Streamlit web interface
+│   ├── main.py               # CLI entry point
+│   ├── detectors/            # Detection implementations
+│   │   ├── __init__.py       # Package initialization
+│   │   ├── base.py           # Abstract detector interface
+│   │   ├── yolo.py           # YOLOv3/YOLOv5 implementations
+│   │   └── ...               # Other detectors
+│   ├── trackers/             # Tracking implementations
+│   │   ├── __init__.py       # Package initialization
+│   │   ├── base.py           # Abstract tracker interface
+│   │   ├── sort.py           # SORT implementation
+│   │   └── ...               # Other trackers
+│   ├── processing/           # Pipeline integration
+│   │   ├── __init__.py       # Package initialization
+│   │   └── run_pair.py       # Detector-tracker execution
+│   ├── metrics/              # Performance evaluation
+│   │   ├── __init__.py       # Package initialization
+│   │   ├── evaluation.py     # Metric calculations
+│    │   └── visualisation.py  # Plot generation
+│   └── util/                 # Helper functions
+│       ├── __init__.py       # Package initialization
+│       ├── paths.py          # Path management
+│       └── ...               # Other utilities
+├── requirements.txt          # Python dependencies
+└── .gitignore                # Ignore patterns for data, models, and caches
+```
 
 ---
 
 ## 🚀 Getting Started (Local Setup)
 
-Although the app is already deployed, you can also run it locally:
+Follow these steps to run the project locally.
 
-### 1. Clone the repository
+### Prerequisites
+
+- Python 3.8 or higher
+- Git
+- A virtual environment tool (e.g., `venv`)
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/rrburman23/FYP.git
 cd FYP
 ```
 
-### 2. Create and activate a virtual environment
+### 2. Create and Activate a Virtual Environment
 
 ```bash
 python -m venv venv
-source venv/bin/activate       # On Windows: venv\Scripts\activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### 3. Install the dependencies
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Run the Streamlit app
+### 4. Run the Streamlit App
 
 ```bash
 streamlit run src/app.py
@@ -91,39 +101,37 @@ streamlit run src/app.py
 
 ### Detectors
 
-- YOLOv3 (automatically downloads weights and config)
-- YOLOv5
-- SSD
-- FasterRCNN
+- **YOLOv3**: Automatically downloads weights and config.
+- **YOLOv5**
+- **SSD**
+- **FasterRCNN**
 
 ### Trackers
 
-- SORT
-- DeepSORT
-- MOSSE
-- KCF
-- MedianFlow
+- **SORT**
+- **DeepSORT**
+- **MOSSE**
+- **KCF**
+- **MedianFlow**
 
 ---
 
-## 📊 Metrics & Visualisations
+## 📊 Metrics & Visualizations
 
-The app computes and displays:
+The application computes and displays the following metrics:
 
-- Total object detections
-- Unique tracks and average duration
-- Identity switches and fragmentation
-- Average processing FPS
-- Memory usage
+- Total object detections.
+- Unique tracks and average track duration.
+- Identity switches and fragmentation.
+- Average processing FPS.
+- Memory usage.
 
-Each processed video includes overlayed detection boxes and track IDs with colour-coded paths.
+Processed videos include overlaid detection boxes and track IDs with color-coded paths.
 
 ---
 
-## 📌 Notes
+## 📝 Notes
 
-Model files such as yolov3.weights, yolov3.cfg, and labels.names are automatically downloaded on first run.
-
-This is a Final Year Project, completed as part of my undergraduate degree at Queen Mary University of London.
-
-There are no plans for future development—this is the final version.
+- Model files (e.g., `yolov3.weights`, `yolov3.cfg`, `labels.names`) are automatically downloaded on the first run.
+- This project was completed as part of an undergraduate degree and is not planned for further development.
+- For any issues, refer to the GitHub repository.
