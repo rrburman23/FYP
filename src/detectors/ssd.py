@@ -9,14 +9,17 @@ class SSDDetector:
     This class wraps the SSD detector and exposes a uniform `.detect(frame)` API.
     """
 
-    def __init__(self, conf_thresh: float = 0.5, device: str | None = None):
+    def __init__(self, model: str = "ssd300_vgg16", conf_thresh: float = 0.5, device: str | None = None):
         """
         Initialize SSD detector with pretrained weights.
 
         Args:
+            model (str): Model variant (currently only "ssd300_vgg16" is supported).
             conf_thresh (float): Minimum confidence threshold to keep a detection.
             device (str | None): The device to run the model on ("cuda" for GPU or "cpu" for CPU).
         """
+        if model != "ssd300_vgg16":
+            raise ValueError(f"Unsupported SSD model: {model}. Only 'ssd300_vgg16' is supported.")
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.model = models.detection.ssd300_vgg16(weights="DEFAULT").to(self.device)
         self.model.eval()

@@ -1,29 +1,77 @@
+"""
+MOSSE (Minimum Output Sum of Squared Error) tracker implementation.
+
+This module provides a wrapper for OpenCV's MOSSE tracker, implementing the TrackerBase
+interface for integration with the detection-tracking pipeline. It supports single-object
+tracking and initializes with the first detection provided.
+"""
+
 import cv2
+import numpy as np
 from trackers.base import TrackerBase
+from typing import List, Dict
+
+def create_mosse_tracker() -> 'cv2.Tracker':
+    """
+    Create a MOSSE tracker compatible with different OpenCV versions.
+
+    Returns:
+        OpenCV MOSSE tracker instance.
+    """
+    if hasattr(cv2, 'legacy'):
+        return cv2.legacy.TrackerMOSSE_create()
+    elif hasattr(cv2, 'TrackerMOSSE_create'):
+        return cv2.TrackerMOSSE_create()
+    else:
+        raise AttributeError("MOSSE tracker is not available in your OpenCV installation.")
 
 class MOSSETracker(TrackerBase):
+    """
+    Wrapper for OpenCV's MOSSE tracker.
+
+    Tracks a single object using the MOSSE algorithm, which is optimized for speed
+    and robustness to lighting changes but limited to one object.
+    """
+
     def __init__(self):
-        # Check if MOSSE tracker is available in the current OpenCV installation
-        if hasattr(cv2, 'legacy') and hasattr(cv2.legacy, 'TrackerMOSSE_create'):
-            self.tracker = cv2.legacy.TrackerMOSSE_create()  # Use legacy version if available
-        elif hasattr(cv2, 'TrackerMOSSE_create'):
-            self.tracker = cv2.TrackerMOSSE_create()  # Use non-legacy version
-        else:
-            raise AttributeError("MOSSE tracker is not available in your OpenCV installation.")
+        """
+        Initialize the MOSSE tracker.
+        """
+        self.tracker = create_mosse_tracker()
         self.initialized = False
         self.track_id = 0
 
-    def init(self, frame, bbox):
+    def init(self, frame: np.ndarray, bbox: List[float]) -> None:
+        """
+        Initialize the tracker with a frame and bounding box.
+
+        Args:
+            frame: Initial video frame (BGR format).
+            bbox: Initial bounding box [x, y, w, h].
+        """
         self.initialized = self.tracker.init(frame, tuple(bbox))
 
-    def update(self, frame, detections):
+    def update(self, frame: np.ndarray, detections: List[List[float]]) -> List[Dict]:
+        """
+        Update the tracker state with new frame and detections.
+
+        If the tracker is not initialized, it uses the first detection to start tracking.
+        Returns the current track position in dictionary format for metrics compatibility.
+
+        Args:
+            frame: Current video frame (BGR format).
+            detections: List of detections [[x1, y1, x2, y2, score], ...].
+
+        Returns:
+            List of dictionaries with keys 'track_id' and 'bbox' [x1, y1, x2, y2].
+        """
         if not self.initialized:
             if len(detections) == 0:
                 return []
             x1, y1, x2, y2, _ = detections[0]
             bbox = [x1, y1, x2 - x1, y2 - y1]
             self.init(frame, bbox)
-            return [[self.track_id, int(x1), int(y1), int(x2), int(y2)]]
+            return [{"track_id": self.track_id, "bbox": [int(x1), int(y1), int(x2), int(y2)]}]
 
         success, bbox = self.tracker.update(frame)
         if not success:
@@ -31,4 +79,4 @@ class MOSSETracker(TrackerBase):
 
         x, y, w, h = bbox
         x1, y1, x2, y2 = int(x), int(y), int(x + w), int(y + h)
-        return [[self.track_id, x1, y1, x2, y2]]
+        return [{"track_id": self.track_id, "bbox": [x1, y1, x2, y2]}]

@@ -1,12 +1,48 @@
 # config/default.yml
-yolo:
-  cfg:     "models/yolov3.cfg"         # Path to YOLOv3 cfg file
-  weights: "models/yolov3.weights" # Path to YOLOv3 weights file
-  names:   "models/labels.names"       # Path to labels (class names)
+# Detector configurations
+detectors:
+  yolo:
+    model: "yolov3"
+    cfg: "models/yolov3.cfg"
+    weights: "models/yolov3.weights"
+    names: "models/labels.names"
+    confidence_threshold: 0.4
+    nms_threshold: 0.45
+  yolov5:
+    model: "yolov5s"  # Ultralytics YOLOv5 small model
+    confidence_threshold: 0.4
+    nms_threshold: 0.4
+  ssd:
+    model: "ssd300_vgg16"  # Torchvision SSD300 VGG16
+    confidence_threshold: 0.5
+    nms_threshold: 0.5
+  fasterrcnn:
+    model: "fasterrcnn_resnet50_fpn"  # Torchvision FasterRCNN ResNet50 FPN
+    confidence_threshold: 0.5
+    nms_threshold: 0.5
+
+# Tracker configurations
+trackers:
+  sort:
+    max_age: 30            # Frames before a track is terminated
+    min_hits: 1            # Allow tracks to start immediately
+    iou_threshold: 0.1     # Relaxed to improve matching
+  deepsort:
+    max_age: 30
+    iou_threshold: 0.3
+  kcf:
+    update_interval: 1
+  mosse:
+    update_interval: 1
+  medianflow:
+    update_interval: 1
 
 # Global processing configuration
 processing:
-  confidence_threshold: 0.4
-  nms_threshold: 0.45
+  max_stored_frames: 1000   # Maximum frames stored in session state
+  default_skip_frames: 10   # Default frame skip for previews
 
-video_path: "data/video.mp4"  # Default path for testing video input
+# Output paths
+output:
+  metrics: "output/metrics"         # Directory for metrics files
+  videos: "output/videos"     # Directory for processed videos

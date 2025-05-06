@@ -1,113 +1,149 @@
-"""
-Kalman Filter-based SORT tracker for simple multi-object tracking.
-"""
-
-from filterpy.kalman import KalmanFilter
 import numpy as np
-from trackers.base import TrackerBase
+from scipy.optimize import linear_sum_assignment
+from filterpy.kalman import KalmanFilter
+from .base import TrackerBase
 
-
-class _Track:
-    """Internal class to manage single track instance."""
-
-    def __init__(self, bbox):
-        self.id = np.random.randint(10000)
-        self.kf = self.initialize_kalman()
-        self.kf.x[:2, 0] = bbox[:2]  # Initialize position
+class Track:
+    def __init__(self, bbox, track_id):
         self.bbox = bbox
+        self.track_id = track_id
+        self.age = 1
+        self.hits = 1
         self.time_since_update = 0
 
-    def initialize_kalman(self):
-        kf = KalmanFilter(dim_x=4, dim_z=2)
-        kf.F = np.array([[1, 0, 1, 0],
-                         [0, 1, 0, 1],
-                         [0, 0, 1, 0],
-                         [0, 0, 0, 1]])
-        kf.H = np.array([[1, 0, 0, 0],
-                         [0, 1, 0, 0]])
-        kf.P *= 1000.
-        kf.Q = np.eye(4)
-        kf.R = np.eye(2)
-        return kf
+        # Initialize Kalman filter
+        self.kf = KalmanFilter(dim_x=7, dim_z=4)
+        self.kf.F = np.array([
+            [1, 0, 0, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0, 0, 1],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 1]
+        ])
+        self.kf.H = np.array([
+            [1, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0]
+        ])
+        self.kf.R *= 10.0
+        self.kf.P[4:, 4:] *= 1000.0
+        self.kf.P *= 10.0
+        self.kf.Q[-1, -1] *= 0.01
+        self.kf.Q[4:, 4:] *= 0.01
 
-    def predict(self):
-        self.kf.predict()
-        self.time_since_update += 1
-
-    def update(self, bbox):
-        self.kf.update(np.array(bbox[:2]))  # Update Kalman filter with new detection
-        self.bbox[:2] = self.kf.x[:2].flatten()  # Correctly assign the 2x1 Kalman output to a 1D array
-        self.time_since_update = 0
-
-
-    def current_bbox(self):
-        x, y = self.kf.x[:2]
-        w, h = self.bbox[2] - self.bbox[0], self.bbox[3] - self.bbox[1]
-        return int(x), int(y), int(x + w), int(y + h)
-
-
-class KalmanTracker:
-    """Manages all SORT tracks."""
-
-    def __init__(self, iou_threshold=0.1, max_age=30):
-        self.iou_threshold = iou_threshold
-        self.max_age = max_age
-        self.tracks = []
-
-    def update(self, detections):
-        updated_tracks = []
-
-        for track in self.tracks:
-            track.predict()
-
-        for det in detections:
-            matched = False
-            for track in self.tracks:
-                iou = self.iou(det, track.bbox)
-                if iou > self.iou_threshold:
-                    track.update(det)
-                    matched = True
-                    break
-            if not matched:
-                self.tracks.append(_Track(det))
-
-        self.tracks = [t for t in self.tracks if t.time_since_update < self.max_age]
-
-        for t in self.tracks:
-            x1, y1, x2, y2 = t.current_bbox()
-            updated_tracks.append([t.id, x1, y1, x2, y2])
-
-        return updated_tracks
-
-    def iou(self, boxA, boxB):
-        x1, y1, x2, y2 = boxA[:4]
-        xx1, yy1, xx2, yy2 = boxB[:4]
-
-        inter_area = max(0, min(x2, xx2) - max(x1, xx1)) * max(0, min(y2, yy2) - max(y1, yy1))
-        boxA_area = (x2 - x1) * (y2 - y1)
-        boxB_area = (xx2 - xx1) * (yy2 - yy1)
-        return inter_area / float(boxA_area + boxB_area - inter_area)
-
+        # Initialize state
+        self.kf.x[:4] = np.array(bbox).reshape(4, 1)
 
 class SORTTracker(TrackerBase):
-    """
-    SORT Tracker using internal Kalman filtering.
-    """
+    def __init__(self, max_age: int = 30, min_hits: int = 1, iou_threshold: float = 0.1):
+        """
+        Initialize SORT tracker.
 
-    def __init__(self):
-        self.tracker = KalmanTracker()
+        :param max_age: Maximum frames before track termination
+        :param min_hits: Minimum detections to start a track
+        :param iou_threshold: IOU threshold for matching
+        """
+        self.max_age = max_age
+        self.min_hits = min_hits
+        self.iou_threshold = iou_threshold
+        self.tracks = []
+        self.next_id = 1
 
-    def init(self, frame, bbox):
-        # SORT doesn't require manual init
+    def init(self, frame: np.ndarray, bbox: list):
+        """
+        Placeholder for abstract method from TrackerBase.
+        SORT does not require initialization with a specific bounding box.
+        """
         pass
 
-    def update(self, frame, boxes):
-        """
-        Args:
-            frame: np.ndarray (unused but required by base)
-            boxes: List of [x1, y1, x2, y2]
 
-        Returns:
-            List of [track_id, x1, y1, x2, y2]
+    def update(self, frame: np.ndarray, detections: list) -> list:
         """
-        return self.tracker.update(boxes)
+        Update tracker with new detections.
+
+        :param frame: Input frame (BGR)
+        :param detections: List of [x1, y1, x2, y2]
+        :return: List of tracks [track_id, x1, y1, x2, y2]
+        """
+        # Predict existing tracks
+        for track in self.tracks:
+            track.kf.predict()
+            track.bbox = track.kf.x[:4].flatten()
+            track.age += 1
+            track.time_since_update += 1
+
+        # Convert detections to numpy for processing
+        detections = np.array(detections, dtype=np.float32) if detections else np.empty((0, 4))
+
+        # Compute IOU between tracks and detections
+        if len(self.tracks) > 0 and len(detections) > 0:
+            iou_matrix = np.zeros((len(self.tracks), len(detections)))
+            for t, track in enumerate(self.tracks):
+                for d, det in enumerate(detections):
+                    iou_matrix[t, d] = self._iou(track.bbox, det)
+
+            # Hungarian assignment
+            row_ind, col_ind = linear_sum_assignment(-iou_matrix)
+
+            # Update matched tracks
+            unmatched_detections = set(range(len(detections)))
+            unmatched_tracks = set(range(len(self.tracks)))
+
+            for t, d in zip(row_ind, col_ind):
+                if iou_matrix[t, d] > self.iou_threshold:
+                    self.tracks[t].kf.update(detections[d])
+                    self.tracks[t].bbox = detections[d]
+                    self.tracks[t].hits += 1
+                    self.tracks[t].time_since_update = 0
+                    unmatched_detections.discard(d)
+                    unmatched_tracks.discard(t)
+
+            # Mark unmatched tracks
+            for t in unmatched_tracks:
+                self.tracks[t].time_since_update += 1
+
+            # Create new tracks for unmatched detections
+            for d in unmatched_detections:
+                new_track = Track(detections[d], self.next_id)
+                self.next_id += 1
+                self.tracks.append(new_track)
+        else:
+            # Create new tracks for all detections
+            for det in detections:
+                new_track = Track(det, self.next_id)
+                self.next_id += 1
+                self.tracks.append(new_track)
+
+        # Remove dead tracks
+        self.tracks = [t for t in self.tracks if t.time_since_update <= self.max_age]
+
+        # Return tracks that meet minimum hits
+        output = []
+        for track in self.tracks:
+            if track.hits >= self.min_hits or track.time_since_update == 0:
+                output.append([track.track_id] + track.bbox.tolist())
+
+        return output
+
+    def _iou(self, bbox1: np.ndarray, bbox2: np.ndarray) -> float:
+        """
+        Compute IOU between two bounding boxes.
+
+        :param bbox1: [x1, y1, x2, y2]
+        :param bbox2: [x1, y1, x2, y2]
+        :return: IOU value
+        """
+        x1 = max(bbox1[0], bbox2[0])
+        y1 = max(bbox1[1], bbox2[1])
+        x2 = min(bbox1[2], bbox2[2])
+        y2 = min(bbox1[3], bbox2[3])
+
+        intersection = max(0, x2 - x1) * max(0, y2 - y1)
+        area1 = (bbox1[2] - bbox1[0]) * (bbox1[3] - bbox1[1])
+        area2 = (bbox2[2] - bbox2[0]) * (bbox2[3] - bbox2[1])
+        union = area1 + area2 - intersection
+
+        return intersection / union if union > 0 else 0.0

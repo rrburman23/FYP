@@ -1,77 +1,127 @@
-from __future__ import annotations
-from typing import List
+"""
+YOLOv3 detector implementation using OpenCV DNN backend.
+
+This module defines the YOLOv3 class, which inherits from DetectorBase and implements
+object detection using the YOLOv3 model. It integrates with getModels.py to automatically
+download model files if they are missing.
+"""
+
 import cv2
 import numpy as np
-from detectors.base import DetectorBase
-from utils.paths import ROOT_DIR, load_config
-from utils.getModels import get_models
+import logging
+from .base import DetectorBase
+from util import ROOT_DIR, get_models
+
+# Configure logging for debugging and monitoring
+logger = logging.getLogger(__name__)
 
 class YOLOv3(DetectorBase):
-    """
-    Custom YOLOv3 (Darknet) detector using OpenCV DNN backend.
-    This class reads a YOLOv3 configuration and weights file and performs detection using OpenCV.
-    """
-
-    def __init__(self, conf_thresh: float = 0.35, nms_thresh: float = 0.45):
+    def __init__(self, model: str = "yolov3", conf_thresh: float = 0.4, nms_thresh: float = 0.45):
         """
-        Initialize YOLOv3 detector.
+        Initialize YOLOv3 detector using OpenCV DNN.
 
-        Args:
-            conf_thresh (float): Confidence threshold for detections.
-            nms_thresh (float): Non-maximum suppression threshold to avoid overlapping boxes.
+        Automatically downloads model files (config, weights, labels) if missing using
+        getModels.py. Loads the YOLOv3 model and prepares it for inference.
+
+        :param model: Model name (e.g., 'yolov3'), used to identify config files
+        :param conf_thresh: Confidence threshold for detections
+        :param nms_thresh: Non-max suppression threshold
+        :raises FileNotFoundError: If class names file cannot be loaded
+        :raises RuntimeError: If model loading fails
         """
-        get_models()
-        ycfg = load_config()["yolo"]  # Load YOLO config
-        cfg = ROOT_DIR / ycfg["cfg"]
-        weights = ROOT_DIR / ycfg["weights"]
-        
-        for p in (cfg, weights):
-            if not p.exists():
-                raise FileNotFoundError(p)
+        self.confidence_threshold = conf_thresh
+        self.nms_threshold = nms_thresh
 
-        # Load YOLOv3 model using OpenCV DNN
-        self.net = cv2.dnn.readNet(str(weights), str(cfg))
-        self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-        self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+        # Download model files if they don't exist
+        try:
+            logger.info("Checking for YOLOv3 model files...")
+            get_models()
+            logger.info("Model files check completed")
+        except Exception as e:
+            logger.error(f"Failed to download model files: {e}")
+            raise RuntimeError(f"Model file download failed: {e}")
 
-        self.conf_thresh = conf_thresh
-        self.nms_thresh = nms_thresh
-        ln = self.net.getLayerNames()
-        self.out_layers = [ln[i - 1] for i in self.net.getUnconnectedOutLayers()]
+        # Paths to model files (relative to ROOT_DIR, as specified in getModels.py)
+        cfg_path = ROOT_DIR / "models/yolov3.cfg"
+        weights_path = ROOT_DIR / "models/yolov3.weights"
+        names_path = ROOT_DIR / "models/labels.names"
 
-    def detect(self, frame) -> List[list]:
+        # Load class names
+        try:
+            with open(names_path, 'r') as f:
+                self.classes = [line.strip() for line in f.readlines()]
+            logger.debug(f"Loaded {len(self.classes)} class names from {names_path}")
+        except FileNotFoundError:
+            logger.error(f"Class names file not found at {names_path}")
+            raise FileNotFoundError(f"Class names file not found at {names_path}")
+
+        # Load YOLO model
+        try:
+            self.net = cv2.dnn.readNetFromDarknet(str(cfg_path), str(weights_path))
+            self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+            self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+            logger.info(f"Successfully loaded YOLOv3 model from {cfg_path} and {weights_path}")
+        except cv2.error as e:
+            logger.error(f"Failed to load YOLOv3 model: {e}")
+            raise RuntimeError(f"Failed to load YOLOv3 model from {cfg_path} and {weights_path}: {e}")
+
+        # Get output layer names for inference
+        self.layer_names = self.net.getLayerNames()
+        self.output_layers = [self.layer_names[i - 1] for i in self.net.getUnconnectedOutLayers()]
+        logger.debug(f"Initialized output layers: {self.output_layers}")
+
+    def detect(self, frame: cv2.Mat) -> np.ndarray:
         """
-        Perform object detection using YOLOv3.
+        Detect objects in the input frame using YOLOv3.
 
-        Args:
-            frame (np.ndarray): Input frame (image) to detect objects.
+        Processes the input frame, runs inference, and applies non-max suppression to
+        filter detections.
 
-        Returns:
-            List[list]: Detected bounding boxes in the format [x1, y1, x2, y2, confidence].
+        :param frame: Input image (BGR format)
+        :return: Array of detections [x1, y1, x2, y2, confidence]
         """
-        H, W = frame.shape[:2]
-        blob = cv2.dnn.blobFromImage(frame, 1/255, (416, 416), swapRB=True)
+        height, width = frame.shape[:2]
+
+        # Preprocess frame for YOLO input
+        blob = cv2.dnn.blobFromImage(frame, 1/255.0, (416, 416), swapRB=True, crop=False)
         self.net.setInput(blob)
-        layer_outs = self.net.forward(self.out_layers)
 
-        boxes, confs = [], []
-        for out in layer_outs:
-            for det in out:
-                scores = det[5:]
-                conf = scores.max()
-                if conf < self.conf_thresh:
-                    continue
-                cx, cy, bw, bh = det[:4] * [W, H, W, H]
-                x1, y1 = int(cx - bw / 2), int(cy - bh / 2)
-                x2, y2 = int(cx + bw / 2), int(cy + bh / 2)
-                boxes.append([x1, y1, int(x2), int(y2)])
-                confs.append(float(conf))
+        # Perform forward pass
+        outputs = self.net.forward(self.output_layers)
 
-        idxs = cv2.dnn.NMSBoxes(boxes, confs, self.conf_thresh, self.nms_thresh)
-        idxs = np.array(idxs).reshape(-1)  # Flatten the indices array
-        res = []
-        for i in idxs.flatten():
-            x, y, bw, bh = boxes[i]
-            res.append([x, y, x + bw, y + bh, confs[i]])
+        # Process detections
+        boxes = []
+        confidences = []
+        class_ids = []
 
-        return res
+        for output in outputs:
+            for detection in output:
+                scores = detection[5:]
+                class_id = np.argmax(scores)
+                confidence = scores[class_id]
+
+                if confidence > self.confidence_threshold:
+                    # Scale bounding box coordinates to image size
+                    center_x = int(detection[0] * width)
+                    center_y = int(detection[1] * height)
+                    w = int(detection[2] * width)
+                    h = int(detection[3] * height)
+
+                    x1 = int(center_x - w/2)
+                    y1 = int(center_y - h/2)
+
+                    boxes.append([x1, y1, x1 + w, y1 + h])
+                    confidences.append(float(confidence))
+                    class_ids.append(class_id)
+
+        # Apply non-max suppression to remove overlapping boxes
+        indices = cv2.dnn.NMSBoxes(boxes, confidences, self.confidence_threshold, self.nms_threshold)
+
+        # Format detections for output
+        detections = []
+        for i in indices:
+            box = boxes[i]
+            detections.append([box[0], box[1], box[2], box[3], confidences[i]])
+
+        # Return detections as a NumPy array
+        return np.array(detections, dtype=np.float32) if detections else np.empty((0, 5), dtype=np.float32)
