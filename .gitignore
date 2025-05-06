@@ -33,11 +33,11 @@ Thumbs.db
 nosetests.xml
 coverage
 
-models/
-
 .pt
 .weights
 .names
+
+models/
 
 # Ignore all in bin except ffmpeg.exe
 bin/*
