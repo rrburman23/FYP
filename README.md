@@ -1,6 +1,6 @@
-# 🎓 Object Detection & Tracking System
+# 🎓 General-Purpose Object Detection & Tracking System
 
-This **Final Year Project** for a **BSc in Computer Science** at Queen Mary University of London implements a real-time object detection and tracking system optimized for UAV (drone) footage. It integrates state-of-the-art detection models and tracking algorithms within an interactive **Streamlit** web application.
+This repository contains the code for my **Final Year Project** submitted for the **BSc in Computer Science at Queen Mary University of London.** The project implements a modular, object detection and tracking system optimised for general video footage. It supports both a graphical web interface using **Streamlit** and a **command-line interface**, offering flexibility for research, monitoring, and security applications.
 
 🔗 **Live Demo**: [Streamlit App](https://deployment-url.streamlit.app)
 
@@ -8,11 +8,14 @@ This **Final Year Project** for a **BSc in Computer Science** at Queen Mary Univ
 
 ## ✨ Features
 
-- Real-time object detection and multi-object tracking.
-- Streamlit-based UI for uploading and processing UAV footage.
-- Support for multiple detectors: YOLOv3, YOLOv5, SSD, FasterRCNN.
-- Support for multiple trackers: SORT, DeepSORT, KCF, MOSSE, MedianFlow.
-- Visualizations and performance metrics for processed videos.
+- **Modular detection + tracking framework**
+- **Streamlit-based UI** for video upload, visualisation, and processing
+- **CLI support** for automation and headless operation
+- **Multiple detection models**: YOLOv3, YOLOv5, SSD, Faster R-CNN
+- **Multiple trackers**: SORT, DeepSORT, KCF, MOSSE, MedianFlow
+- **Outputs**: Annotated videos, frame-by-frame tracking IDs, performance metrics
+- **Extensible**: Easy to add new models and backends
+- **Customisable UI**: Adjust preview frequency and manage experiment queues
 
 ---
 
@@ -29,28 +32,28 @@ FYP/
 │   │   └── yolov3.weights    # YOLOv3 weights
 │   └── ...                   # Other model directories
 ├── src/                      # Source code
-│   ├── __init__.py           # Package initialization
+│   ├── __init__.py           # Package initialisation
 │   ├── app.py                # Streamlit web interface
 │   ├── main.py               # CLI entry point
 │   ├── detectors/            # Detection implementations
-│   │   ├── __init__.py       # Package initialization
+│   │   ├── __init__.py       # Package initialisation
 │   │   ├── base.py           # Abstract detector interface
 │   │   ├── yolo.py           # YOLOv3/YOLOv5 implementations
 │   │   └── ...               # Other detectors
 │   ├── trackers/             # Tracking implementations
-│   │   ├── __init__.py       # Package initialization
+│   │   ├── __init__.py       # Package initialisation
 │   │   ├── base.py           # Abstract tracker interface
 │   │   ├── sort.py           # SORT implementation
 │   │   └── ...               # Other trackers
 │   ├── processing/           # Pipeline integration
-│   │   ├── __init__.py       # Package initialization
+│   │   ├── __init__.py       # Package initialisation
 │   │   └── run_pair.py       # Detector-tracker execution
 │   ├── metrics/              # Performance evaluation
-│   │   ├── __init__.py       # Package initialization
+│   │   ├── __init__.py       # Package initialisation
 │   │   ├── evaluation.py     # Metric calculations
 │    │   └── visualisation.py  # Plot generation
 │   └── util/                 # Helper functions
-│       ├── __init__.py       # Package initialization
+│       ├── __init__.py       # Package initialisation
 │       ├── paths.py          # Path management
 │       └── ...               # Other utilities
 ├── requirements.txt          # Python dependencies
@@ -116,7 +119,7 @@ streamlit run src/app.py
 
 ---
 
-## 📊 Metrics & Visualizations
+## 📊 Metrics & Visualisations
 
 The application computes and displays the following metrics:
 
@@ -132,6 +135,6 @@ Processed videos include overlaid detection boxes and track IDs with color-coded
 
 ## 📝 Notes
 
-- Model files (e.g., `yolov3.weights`, `yolov3.cfg`, `labels.names`) are automatically downloaded on the first run.
+- Model files (e.g., yolov3.weights, yolov3.cfg, labels.names) are automatically downloaded on the first run.
 - This project was completed as part of an undergraduate degree and is not planned for further development.
 - For any issues, refer to the GitHub repository.
