@@ -1,6 +1,6 @@
 import os
 import time
-import torch
+import torch 
 import streamlit as st
 from pathlib import Path
 import cv2
@@ -451,7 +451,10 @@ if page.startswith("📜"):
         **Supported Formats**:
         - Videos: MP4 (H.264), MOV, AVI (MJPEG). Requires FFmpeg (`bin/ffmpeg.exe`).
         - Images: ZIP file containing JPEG/PNG frames (no FFmpeg required).
+        
+
         **Note**: Refreshing the browser resets the session, clearing the queue and results.
+        
         """
     )
     if st.button("🔄 Reset session"):
