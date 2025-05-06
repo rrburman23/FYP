@@ -2,7 +2,7 @@
 
 This repository contains the code for my **Final Year Project** submitted for the **BSc in Computer Science at Queen Mary University of London.** The project implements a modular, object detection and tracking system optimised for general video footage. It supports both a graphical web interface using **Streamlit** and a **command-line interface**, offering flexibility for research, monitoring, and security applications.
 
-🔗 **Live Demo**: [Streamlit App](https://deployment-url.streamlit.app)
+🔗 **Live Demo**: [Streamlit App](https://detector-tracker-pairs.streamlit.app)
 
 ---
 

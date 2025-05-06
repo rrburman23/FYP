@@ -46,3 +46,5 @@ class TrackerBase(ABC):
             bbox (list): Initial bounding box [x, y, w, h].
         """
         pass
+
+
