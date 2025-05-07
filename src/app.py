@@ -13,6 +13,7 @@ import importlib
 import shutil
 import subprocess
 import zipfile
+import platform
 from typing import Dict, List, Any
 
 from util.visualise import draw_detections, draw_tracks
@@ -66,33 +67,21 @@ except Exception as e:
     st.stop()
 
 # Check for FFmpeg availability (bundled or system)
-ffmpeg_path = Path("bin/ffmpeg.exe")
 ffmpeg_available = False
-if ffmpeg_path.exists():
-    try:
-        subprocess.run([str(ffmpeg_path), "-version"], capture_output=True, check=True)
-        ffmpeg_available = True
-        st.session_state.setdefault('logs', []).append(f"{datetime.now()}: Found bundled FFmpeg at {ffmpeg_path}")
-    except (subprocess.CalledProcessError, FileNotFoundError, PermissionError) as e:
-        st.session_state.setdefault('logs', []).append(f"{datetime.now()}: Bundled FFmpeg check failed: {e}")
-else:
-    try:
-        subprocess.run(["ffmpeg", "-version"], capture_output=True, check=True)
-        ffmpeg_available = True
-        st.session_state.setdefault('logs', []).append(f"{datetime.now()}: Found system FFmpeg")
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        st.warning(
-            f"""
-            FFmpeg is not found in project directory ({ffmpeg_path}) or system PATH. Video processing is disabled.
-            You can still process image sequences (ZIP of JPEG/PNG files).
-            To enable video support, place `ffmpeg.exe` in `{ffmpeg_path}`:
-            1. Download from https://www.gyan.dev/ffmpeg/builds/ (e.g., ffmpeg-release-essentials.zip).
-            2. Extract `bin/ffmpeg.exe` to `{ffmpeg_path}`.
-            3. Verify with: `bin\\ffmpeg.exe -version`.
-            """
-        )
-        st.session_state.setdefault('logs', []).append(f"{datetime.now()}: FFmpeg not found: {e}")
-
+try:
+    subprocess.run(["ffmpeg", "-version"], capture_output=True, check=True)
+    ffmpeg_available = True
+    st.session_state.setdefault('logs', []).append(f"{datetime.now()}: Found system FFmpeg")
+except (subprocess.CalledProcessError, FileNotFoundError) as e:
+    st.warning(
+        """
+        FFmpeg is required for video processing but was not found in the system PATH.
+        Video processing is disabled. You can still process image sequences (ZIP of JPEG/PNG files).
+        To enable video support, ensure FFmpeg is installed in the deployment environment.
+        For Streamlit Cloud, add `ffmpeg` to `packages.txt` and redeploy.
+        """
+    )
+    st.session_state.setdefault('logs', []).append(f"{datetime.now()}: FFmpeg not found: {e}")
 # Define supported detectors and trackers
 DETECTORS = ["YOLOv3", "YOLOv5", "SSD", "FasterRCNN"]
 TRACKERS = ["DeepSORT", "SORT", "KCF", "MOSSE", "MedianFlow"]
