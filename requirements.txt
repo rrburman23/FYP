@@ -3,15 +3,15 @@ filterpy==1.4.5
 matplotlib==3.7.1
 numpy==1.26.4
 opencv-python==4.10.0.84
-opencv-contrib-python==4.10.0.84  # Match opencv-python version
+opencv-contrib-python==4.10.0.84
 psutil==7.0.0
 PyYAML==6.0.1
 Cython>=0.29.36
-scipy==1.10.1
+scipy==1.15.2  
 streamlit==1.39.0
 torch==2.3.0
-torchvision==0.18.0  # Compatible with torch==2.3.0
-torchaudio==2.3.0  # Compatible with torch==2.3.0
+torchvision==0.18.0
+torchaudio==2.3.0
 tqdm==4.65.0
 Pillow>=9.0.0
 setuptools>=65.5.1
